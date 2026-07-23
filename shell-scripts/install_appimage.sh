@@ -114,12 +114,23 @@ fi
 mkdir -p "$APP_DIR" "$DESKTOP_DIR" "$ICON_DIR"
 
 BASENAME="$(basename "$SRC")"
-DEST="$APP_DIR/$BASENAME"
+
+# Resolve to an absolute path so we can tell if SRC already lives
+# somewhere under APP_DIR (e.g. ~/Applications/VeraCrypt/App.AppImage)
+SRC_ABS="$(cd "$(dirname "$SRC")" && pwd)/$BASENAME"
+APP_DIR_ABS="$(cd "$APP_DIR" && pwd)"
+
+if [[ "$SRC_ABS" == "$APP_DIR_ABS"/* ]]; then
+    # Already inside ~/Applications (possibly in a subfolder) — leave it in place
+    DEST="$SRC_ABS"
+else
+    DEST="$APP_DIR/$BASENAME"
+fi
 
 chmod +x "$SRC"
 
 # Move into the permanent location (skip if already installed there)
-if [[ "$SRC" != "$DEST" ]]; then
+if [[ "$SRC_ABS" != "$DEST" ]]; then
     mv -n "$SRC" "$DEST"
 fi
 chmod +x "$DEST"
